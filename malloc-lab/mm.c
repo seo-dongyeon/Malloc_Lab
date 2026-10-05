@@ -1,13 +1,13 @@
 /*
- * mm-naive.c - The fastest, least memory-efficient malloc package.
- *
- * In this naive approach, a block is allocated by simply incrementing
- * the brk pointer.  A block is pure payload. There are no headers or
- * footers.  Blocks are never coalesced or reused. Realloc is
- * implemented directly using mm_malloc and mm_free.
- *
- * NOTE TO STUDENTS: Replace this header comment with your own header
- * comment that gives a high level description of your solution.
+ * mm-naive.c - 가장 빠르지만 메모리 효율이 가장 낮은 malloc 구현.
+ * 
+ * 이 단순한 방식은 brk 포인터를 늘리는 것만으로
+ * 블록을 할당한다. 블록은 순수한 사용자 데이터로 구성되며
+ * 헤더와 푸터가 없다. 블록을 합치거나 재사용하지 않는다.
+ * realloc은 mm_malloc과 mm_free를 직접 사용하여 구현한다.
+ * 
+ * 학생 참고: 이 주석을 자신의 구현 방식을
+ * 전체적으로 설명하는 주석으로 교체한다.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,32 +18,32 @@
 #include "mm.h"
 #include "memlib.h"
 
-/*********************************************************
- * NOTE TO STUDENTS: Before you do anything else, please
- * provide your team information in the following struct.
- ********************************************************/
+/*
+ * 학생 참고: 다른 작업을 시작하기 전에
+ * 아래 구조체에 팀 정보를 입력한다.
+ */
 team_t team = {
-    /* Team name */
+    /* 팀 이름 */
     "ateam",
-    /* First member's full name */
+    /* 첫 번째 구성원의 전체 이름 */
     "Harry Bovik",
-    /* First member's email address */
+    /* 첫 번째 구성원의 이메일 주소 */
     "bovik@cs.cmu.edu",
-    /* Second member's full name (leave blank if none) */
+    /* 두 번째 구성원의 전체 이름(없으면 빈 문자열) */
     "",
-    /* Second member's email address (leave blank if none) */
+    /* 두 번째 구성원의 이메일 주소(없으면 빈 문자열) */
     ""};
 
-/* single word (4) or double word (8) alignment */
+/* 단일 워드(4바이트) 또는 더블 워드(8바이트) 단위 정렬 */
 #define ALIGNMENT 8
 
-/* rounds up to the nearest multiple of ALIGNMENT */
+/* 가장 가까운 ALIGNMENT의 배수로 올림한다 */
 #define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~0x7)
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
 /*
- * mm_init - initialize the malloc package.
+ * mm_init - malloc 구현을 초기화한다.
  */
 int mm_init(void)
 {
@@ -51,8 +51,8 @@ int mm_init(void)
 }
 
 /*
- * mm_malloc - Allocate a block by incrementing the brk pointer.
- *     Always allocate a block whose size is a multiple of the alignment.
+ * mm_malloc - brk 포인터를 늘려 블록을 할당한다.
+ *     블록 크기는 항상 정렬 단위의 배수가 되도록 한다.
  */
 void *mm_malloc(size_t size)
 {
@@ -68,14 +68,14 @@ void *mm_malloc(size_t size)
 }
 
 /*
- * mm_free - Freeing a block does nothing.
+ * mm_free - 블록 해제 시 아무 작업도 하지 않는다.
  */
 void mm_free(void *ptr)
 {
 }
 
 /*
- * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
+ * mm_realloc - mm_malloc과 mm_free를 사용하여 단순하게 구현한다.
  */
 void *mm_realloc(void *ptr, size_t size)
 {
