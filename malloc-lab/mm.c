@@ -224,35 +224,69 @@ void mm_free(void *bp)
 
 void *mm_realloc(void *bp, size_t size)
 {
-    if (bp == NULL) //빈 블록일때
+    if (bp == NULL) //기존 블록 주소가 없을 때
         return mm_malloc(size);
 
-    if (size == 0)  //사이즈가 0일떄
+    if (size == 0)  // 크기가 0이면 기존 블록 해제
     {
         mm_free(bp);
         return NULL;
     }
 
-    size_t osize = GET_SIZE((HDRP(bp)));
-    size_t copySize = (osize - DSIZE);
-    size_t asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
+    size_t osize = GET_SIZE((HDRP(bp)));    //원래 사이즈
+    size_t copySize = (osize - DSIZE);  //카피할 사이즈
+    size_t asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);  //사이즈 표준화 8바이트 단위로
     
+    // 기존 데이터 영역보다 큰 요청: 블록 확장
     if (size > copySize)
     {
+        void *nextbp = NEXT_BLKP(bp);
+        size_t next_alloc = GET_ALLOC(HDRP(nextbp));
+        size_t next_size = GET_SIZE(HDRP(nextbp));
+        size_t total = osize + next_size;
+        
+        // 다음 블록이 비어 있고 합친 크기가 충분하면 제자리 확장
+        if ((!next_alloc) && ((next_size + osize) >= asize))
+        {
+            size_t remain = total - asize;
+            //남는 공간이 16바이트 미만이면 그대로 진행
+            if (remain < (2*DSIZE))
+            {
+                PUT(HDRP(bp), PACK(total, 1));
+                PUT(FTRP(bp), PACK(total, 1));
+                return bp;
+            }
+            //남는 공간이 16비트 이상이면 필요한 크기만 사용하고 나머지를 빈 블록으로 구성
+            else
+            {
+                PUT(HDRP(bp), PACK(asize, 1));
+                PUT(FTRP(bp), PACK(asize, 1));
+                void *nbp = NEXT_BLKP(bp);
+                PUT(HDRP(nbp), PACK(remain, 0));
+                PUT(FTRP(nbp), PACK(remain, 0));
+                coalesce(nbp);
+
+                return bp;
+            }
+        }
+        // 제자리 확장이 불가능하면 새 블록에 복사
         void *newbp = mm_malloc(size);
-        if (newbp == NULL) return NULL;
+        if (newbp == NULL) return NULL; // 할당 실패 시 기존 블록 유지
 
         memcpy(newbp, bp, copySize);
         mm_free(bp);
         return newbp;
     }
+    // 요청 크기가 기존 데이터 영역 용량과 같으면 그대로 유지
     else if(size == copySize)
     {   
         return bp;
     }
+    // 기존 데이터 영역보다 작은 요청: 남는 공간 분할 검토
     else
     {
         size_t remain = osize - asize;
+        // 남는 공간이 16바이트 이상이면 빈 블록으로 분할하고 병합
         if (remain >= (2*DSIZE))
         {
             PUT(HDRP(bp), PACK(asize, 1));
@@ -264,6 +298,7 @@ void *mm_realloc(void *bp, size_t size)
             PUT(FTRP(newbp), PACK((remain), 0));
             coalesce(newbp);
         }
+        // 분할 여부와 관계없이 기존 주소 유지
         return bp;
     }
 }
